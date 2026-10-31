@@ -13,3 +13,23 @@
 # - ThreatScorer     P4 — Defensa y SOC
 # - Isolator         P4 — Defensa y SOC
 # - EventBus         P4 — Defensa y SOC
+
+from typing import Protocol
+
+from honey_agent.contracts.snapshots import CommandResult, SessionSnapshot
+
+
+class LanguageModel(Protocol):
+    """Llama al modelo. Lo implementan Gemini y Ollama."""
+
+    async def complete(self, system: str, user: str) -> str:
+        """Devuelve el texto crudo del modelo, todavía sin filtrar."""
+        ...
+
+
+class ShellEmulator(Protocol):
+    """Terminal falsa. La implementa el emulador de P2."""
+
+    async def execute(self, snapshot: SessionSnapshot, command: str) -> CommandResult:
+        """Convierte el comando en stdout, stderr, código de salida y cambios."""
+        ...

@@ -2,3 +2,24 @@
 # Responsabilidad: Reexportará ports, events y snapshots cuando existan. Hoy solo marca el paquete.
 # Puede importar: biblioteca estándar y pydantic
 # No importar: el resto de honey_agent
+
+from honey_agent.contracts.ports import LanguageModel, ShellEmulator
+from honey_agent.contracts.snapshots import (
+    CommandResult,
+    HistoryEntry,
+    SessionSnapshot,
+    VfsAction,
+    VfsMutation,
+    VfsView,
+)
+
+__all__ = [
+    "CommandResult",
+    "HistoryEntry",
+    "LanguageModel",
+    "SessionSnapshot",
+    "ShellEmulator",
+    "VfsAction",
+    "VfsMutation",
+    "VfsView",
+]
