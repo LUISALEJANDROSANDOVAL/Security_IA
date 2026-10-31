@@ -1,4 +1,4 @@
-# **Honey-Agent: Guía de Construcción - Parte 1 (Ingress y VFS en Memoria)**
+﻿# **Honey-Agent: Guía de Construcción - Parte 1 (Ingress y VFS en Memoria)**
 
 * **Documento:** Technical Implementation Blueprint - Phase 1 (Ingress & In-Memory State Engine)
 * **Código de Documento:** HA-SPEC-11
@@ -587,9 +587,9 @@ class HoneyAuthHandler:
 ---
 
 ### **4.5. `src/honey_agent/ingress/pty_session.py`**
-Implementa el flujo interactivo de la terminal VT100/ANSI, procesando caracteres individuales en modo crudo (*raw*), ecos, borrados y señales.
+Implementa el flujo interactivo de la terminal VT100/ANSI y el modo no interactivo (exec_requested), procesando caracteres individuales en modo crudo (*raw*), ecos, borrados y señales.
 
-```python
+``python
 """
 src/honey_agent/ingress/pty_session.py
 Dueño: Programador 1 (P1).
@@ -607,6 +607,7 @@ class HoneyPTYSession(asyncssh.SSHServerSession):
         self.state = session_state
         self._chan: Optional[asyncssh.SSHServerChannel] = None
         self._input_buffer: str = ""
+        self._exec_command: Optional[str] = None
 
     def connection_made(self, chan: asyncssh.SSHServerChannel):
         self._chan = chan
@@ -617,13 +618,40 @@ class HoneyPTYSession(asyncssh.SSHServerSession):
     def shell_requested(self) -> bool:
         return True
 
+    def exec_requested(self, command: str) -> bool:
+        """Acepta comandos remotos no interactivos (ej. ssh user@host cmd)."""
+        self._exec_command = command
+        return True
+
     def session_started(self):
-        """Emite el prompt inicial al abrir la terminal."""
-        prompt = self.state.get_prompt()
-        self._chan.write(prompt)
+        """Emite el prompt o ejecuta el comando recibido."""
+        if not self._chan:
+            return
+
+        if self._exec_command is not None:
+            # Modo no interactivo (ejecutar y cerrar)
+            handled, stdout, stderr, code = self.state.execute_builtin(self._exec_command)
+            if not handled:
+                cmd_first = self._exec_command.split()[0] if self._exec_command.split() else ""
+                self._chan.write_stderr(f"bash: {cmd_first}: command not found\n")
+                self._chan.exit(127)
+            else:
+                if stdout:
+                    self._chan.write(stdout)
+                if stderr:
+                    self._chan.write_stderr(stderr)
+                self._chan.exit(code)
+            self._chan.close()
+        else:
+            # Modo interactivo (shell PTY)
+            prompt = self.state.get_prompt()
+            self._chan.write(prompt)
 
     def data_received(self, data: str, datatype: asyncssh.DataType):
         """Procesa caracteres entrantes con emulación de terminal VT100."""
+        if not self._chan:
+            return
+
         for char in data:
             # 1. Enter (\r o \n)
             if char in ("\r", "\n"):
@@ -671,15 +699,15 @@ class HoneyPTYSession(asyncssh.SSHServerSession):
             # 5. Caracteres imprimibles estándar
             elif ord(char) >= 32:
                 self._input_buffer += char
-                self._chan.write(char) # Eco local de terminal
-```
+                self._chan.write(char)
+``
 
 ---
 
 ### **4.6. `src/honey_agent/ingress/ssh_server.py`**
-Subclase de `asyncssh.SSHServer` que orquesta la autenticación, asocia a cada atacante un `VirtualFileSystem` clonado e independiente, e instancia la sesión PTY.
+Subclase de syncssh.SSHServer que orquesta la autenticación (password_auth_supported, alidate_password), asocia a cada atacante un VirtualFileSystem clonado e independiente, e instancia la sesión PTY.
 
-```python
+``python
 """
 src/honey_agent/ingress/ssh_server.py
 Dueño: Programador 1 (P1).
@@ -715,7 +743,12 @@ class HoneySSHServer(asyncssh.SSHServer):
         self.username = username or "root"
         return True
 
-    def password_auth_requested(self, username: str, password: str) -> bool:
+    def password_auth_supported(self) -> bool:
+        """Habilita la autenticación por contraseña."""
+        return True
+
+    def validate_password(self, username: str, password: str) -> bool:
+        """Captura credenciales enviadas y autoriza el acceso."""
         return self.auth_handler.authenticate_password(
             ip=self.client_ip, port=self.client_port, username=username, password=password
         )
@@ -725,7 +758,7 @@ class HoneySSHServer(asyncssh.SSHServer):
         isolated_vfs = self.master_vfs.clone()
         session_state = SessionState(vfs=isolated_vfs, username=self.username)
         return HoneyPTYSession(session_state)
-```
+``
 
 ---
 
@@ -918,3 +951,4 @@ python -m honey_agent.composition.wire_ingress
 ssh root@127.0.0.1 -p 2222
 # Probar comandos: pwd, ls -la, cd /var/www/html, cat index.nginx-debian.html, echo "demo" > test.txt, cat test.txt, exit
 ```
+

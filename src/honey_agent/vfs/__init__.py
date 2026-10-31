@@ -1,4 +1,9 @@
-# Dueño: P1 — Ingress y VFS
-# Responsabilidad: Paquete del sistema de archivos en RAM.
-# Puede importar: honey_agent.contracts
-# No importar: honey_agent.ingress, honey_agent.posix, honey_agent.tarpit, honey_agent.canary, honey_agent.defense, honey_agent.composition
+"""
+Módulo VFS: Sistema de Archivos Virtual en Memoria (Zero-Disk).
+"""
+
+from honey_agent.vfs.in_memory_tree import VFSNode, VirtualFileSystem
+from honey_agent.vfs.skeleton import populate_ubuntu_skeleton
+from honey_agent.vfs.session_state import SessionState
+
+__all__ = ["VFSNode", "VirtualFileSystem", "populate_ubuntu_skeleton", "SessionState"]
