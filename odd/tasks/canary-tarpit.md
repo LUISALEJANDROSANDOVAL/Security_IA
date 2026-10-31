@@ -30,7 +30,7 @@ S10. Orden dentro del flujo ya aceptado: P2 entrega stdout, stderr y exit code; 
 
 - T1 | S2 S5 S6 | delegated | done | commit: 9934b7c — clasificador y motor de retardo en `tarpit/classifier.py` y `tarpit/engine.py`. Runner local ausente (python y py no están). Revisión GGA del commit: PASSED. Tensión: S6 fija 0.05 s y S2 pide menos de 50 ms; el test afirma 0.05 exacto.
 - T2 | S4 S7 | delegated | done | commit: 1732ba3 — fábrica HMAC en `canary/factory.py`. Runner local ausente. Revisión GGA del commit: PASSED.
-- T3 | S3 S4 S8 | inline | pending | commit: none — inoculador en `canary/inoculator.py`. Depende de T2.
+- T3 | S3 S4 S8 | delegated | done | commit: e8d8d98 — inoculador en `canary/inoculator.py`. Cubre `.env`, `~/.aws/credentials`, `history`, `.bash_history`, `/etc/hosts`, `/etc/mysql/my.cnf` y `env`. `~/.ssh/id_rsa` queda sin match: no hay librería para una RSA de 2048 bits válida. Runner local ausente. Revisión GGA: PASSED.
 - T4 | S3 S9 | inline | pending | commit: none — registro en `canary/tracker.py`. Depende de T3.
 - T5 | S10 | inline | pending | commit: none — ensamble en `composition/wire_deception.py`. Depende de T1–T4.
 
@@ -45,5 +45,7 @@ L3. 2026-10-31. "ok crea las tareas para empezar a hacer"
 L4. 2026-10-31. Análisis del flujo completo entregado en la conversación, sin cambios de código. Siguiente tarea pendiente: T1.
 
 L6. 2026-10-31. T1 cerrada en 9934b7c. T2 cerrada en 1732ba3. Los unittest no se ejecutaron: no hay intérprete Python. Siguiente tarea: T3.
+
+L7. 2026-10-31. T3 cerrada en e8d8d98, con el hueco de `~/.ssh/id_rsa`. Siguiente tarea: T4.
 
 L5. 2026-10-31. Espejo Engram pendiente. `security_ia` no está registrado; un guardado automático cayó en el proyecto `usuario` (observación 47) y no vale como espejo de este repositorio.
