@@ -1,4 +1,4 @@
-# **Centro Maestro de Documentación Técnica: Honey-Agent**
+﻿# **Centro Maestro de Documentación Técnica: Honey-Agent**
 
 Bienvenido al centro oficial de documentación del proyecto **Honey-Agent**, el agente defensivo tarpit con contra-inteligencia en memoria y mitigación perimetral autónoma.
 
@@ -18,9 +18,10 @@ graph TD
     Hub --> Doc8["08. Pitch Deck & Guión de Demo<br/>(HA-PITCH-08)"]
     Hub --> Doc9["09. Plan de Implementación en 4 Fases<br/>(HA-DEV-09)"]
     Hub --> Doc10["10. Reparto entre 4 Programadores<br/>(HA-TEAM-10)"]
+    Hub --> Doc11["11. Guía de Construcción Parte 1<br/>(HA-SPEC-11)"]
 
     classDef core fill:#1890ff,stroke:#fff,stroke-width:2px,color:#fff;
-    class Hub,Doc1,Doc2,Doc3,Doc4,Doc5,Doc6,Doc7,Doc8,Doc9,Doc10 core;
+    class Hub,Doc1,Doc2,Doc3,Doc4,Doc5,Doc6,Doc7,Doc8,Doc9,Doc10,Doc11 core;
 ```
 
 ---
@@ -39,6 +40,7 @@ graph TD
 | **HA-PITCH-08** | **Pitch Deck, Guión Demo y Defensa Técnica** | [08_Pitch_Deck_Guion_Demo_y_Defensa_Tecnica.md](file:///C:/Security_IA/docs/08_Pitch_Deck_Guion_Demo_y_Defensa_Tecnica.md) | Evaluadores, Oradores, Red Team | Pitch de 30s, 3 min y 10 min, guía paso a paso de demostración en vivo (Kali vs SOC) y respuestas a 8 preguntas difíciles de jurado. |
 | **HA-DEV-09** | **Plan de Implementación en 4 Fases** | [09_Plan_de_Implementacion_y_Construccion_en_4_Fases.md](file:///C:/Security_IA/docs/09_Plan_de_Implementacion_y_Construccion_en_4_Fases.md) | Desarrolladores, Líderes Técnicos, DevOps | Hoja de ruta de desarrollo dividida en 4 partes modulares: Ingress/VFS, LLM POSIX, Tarpit/Canary y MITRE/Netfilter/SOC. |
 | **HA-TEAM-10** | **Reparto entre 4 Programadores** | [10_Reparto_de_Trabajo_4_Programadores.md](file:///C:/Security_IA/docs/10_Reparto_de_Trabajo_4_Programadores.md) | Programadores P1–P4 | Dueño de cada carpeta y archivo, regla de imports y criterio de cierre para trabajar en paralelo. |
+| **HA-SPEC-11** | **Guía de Construcción Parte 1** | [11_Guia_de_Construccion_Parte_1_Ingress_y_VFS.md](11_Guia_de_Construccion_Parte_1_Ingress_y_VFS.md) | Programador 1 (P1), Líder Técnico | Especificación paso a paso con código completo para Ingress (AsyncSSH, PTY) y VFS en RAM (Zero-Disk). |
 
 ---
 

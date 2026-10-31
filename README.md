@@ -1,4 +1,4 @@
-# **Honey-Agent: Agente Defensivo Tarpit con Contra-Inteligencia en Memoria**
+﻿# **Honey-Agent: Agente Defensivo Tarpit con Contra-Inteligencia en Memoria**
 
 > **Defensa Activa, Decepción Cognitiva con Modelos de Lenguaje y Aislamiento Perimetral Autónomo a Nivel de Kernel**
 
