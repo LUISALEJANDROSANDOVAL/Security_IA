@@ -3,7 +3,17 @@
 # Puede importar: biblioteca estándar y pydantic
 # No importar: el resto de honey_agent
 
-from honey_agent.contracts.ports import FileSystem, LanguageModel, ShellEmulator, ShellSession
+from honey_agent.contracts.ports import (
+    CanarySource,
+    EventBus,
+    FileSystem,
+    Isolator,
+    LanguageModel,
+    ShellEmulator,
+    ShellSession,
+    Tarpit,
+    ThreatScorer,
+)
 from honey_agent.contracts.snapshots import (
     CommandResult,
     HistoryEntry,
@@ -15,13 +25,18 @@ from honey_agent.contracts.snapshots import (
 )
 
 __all__ = [
+    "CanarySource",
     "CommandResult",
+    "EventBus",
     "FileSystem",
     "HistoryEntry",
+    "Isolator",
     "LanguageModel",
     "SessionSnapshot",
     "ShellEmulator",
     "ShellSession",
+    "Tarpit",
+    "ThreatScorer",
     "VfsAction",
     "VfsEntryView",
     "VfsMutation",
