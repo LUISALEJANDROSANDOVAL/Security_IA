@@ -7,6 +7,9 @@ import sys
 import unittest
 from pathlib import Path
 
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+
 _SRC = Path(__file__).resolve().parents[2] / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
@@ -138,10 +141,24 @@ class InoculateTests(unittest.TestCase):
         self.assertIsNone(_call("echo env"))
         self.assertIsNone(_call("grep env /etc/passwd"))
 
-    def test_cat_id_rsa_returns_none(self) -> None:
-        # Sin librería RSA en el repo no hay PEM de 2048 bits válido. El path queda sin match.
-        self.assertIsNone(_call("cat ~/.ssh/id_rsa"))
-        self.assertIsNone(_call("cat /root/.ssh/id_rsa"))
+    def test_cat_id_rsa_returns_2048_bit_private_key(self) -> None:
+        # destination_asset is the path argument as written when its final
+        # component is id_rsa. whoami is not a read, so it stays unmatched.
+        home = _call("cat ~/.ssh/id_rsa")
+        root = _call("cat /root/.ssh/id_rsa")
+        self.assertIsNone(_call("whoami"))
+        self.assertIsNotNone(home)
+        self.assertIsNotNone(root)
+        for result, path in ((home, "~/.ssh/id_rsa"), (root, "/root/.ssh/id_rsa")):
+            with self.subTest(path=path):
+                self.assertEqual(result.token_type, "SSH_PRIVATE_KEY")
+                self.assertEqual(result.token_identifier, "id_rsa")
+                self.assertEqual(result.destination_asset, path)
+                self.assertTrue(result.output.endswith("\n"))
+                key = serialization.load_pem_private_key(result.output.encode(), password=None)
+                self.assertIsInstance(key, rsa.RSAPrivateKey)
+                self.assertEqual(key.key_size, 2048)
+        self.assertNotEqual(home.output, root.output)
 
 
 if __name__ == "__main__":

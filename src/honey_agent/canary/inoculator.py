@@ -6,7 +6,7 @@
 import shlex
 from dataclasses import dataclass
 
-from honey_agent.canary.factory import generate_canary_aws_key
+from honey_agent.canary.factory import generate_canary_aws_key, generate_rsa_private_key_pem
 
 _POSTGRES_URI = "postgres://db_backup:p4ss@10.0.8.44:5432/corp_fin"
 _SSH_LINE = "ssh -i ~/.ssh/backup_key dbadmin@10.0.12.88"
@@ -23,6 +23,8 @@ _TOKEN_AWS = "AWS_IAM_CREDENTIAL"
 _TOKEN_BASH = "BASH_HISTORY"
 _TOKEN_DNS = "DNS_CANARY"
 _TOKEN_DB = "DB_CONFIG"
+_TOKEN_SSH = "SSH_PRIVATE_KEY"
+_ID_RSA = "id_rsa"
 
 _READERS = frozenset({
     "awk",
@@ -78,8 +80,8 @@ def inoculate(
     """Return session bait, or None when the command is not seeking a secret.
 
     A match discards any earlier stdout: the caller shows only this output.
-    ~/.ssh/id_rsa stays unmatched. A valid 2048-bit RSA private key needs a
-    library this repository does not have, and an invented PEM is not one.
+    A read whose path's final component is id_rsa returns a new 2048-bit RSA
+    private key. destination_asset is that path argument as written.
     """
     text = command.strip()
     if not text:
@@ -100,6 +102,10 @@ def inoculate(
         return _dns_inoculation()
     if reading and _mentions(text, _MYSQL_PATH):
         return _db_inoculation()
+    if reading:
+        rsa_path = _id_rsa_path(text)
+        if rsa_path is not None:
+            return _ssh_key_inoculation(rsa_path)
     if _command_name(tokens) == "history":
         return _history_inoculation("history")
     if _command_name(tokens) == "env":
@@ -155,6 +161,31 @@ def _dns_inoculation() -> Inoculation:
         token_identifier=_DNS_NAME,
         destination_asset=_HOSTS_PATH,
     )
+
+
+def _ssh_key_inoculation(destination_asset: str) -> Inoculation:
+    pem = generate_rsa_private_key_pem()
+    if not pem.endswith("\n"):
+        pem += "\n"
+    return Inoculation(
+        output=pem,
+        token_type=_TOKEN_SSH,
+        token_identifier=_ID_RSA,
+        destination_asset=destination_asset,
+    )
+
+
+def _id_rsa_path(command: str) -> str | None:
+    """Return the first token whose final path component is id_rsa."""
+    try:
+        parts = shlex.split(command, posix=True)
+    except ValueError:
+        parts = command.split()
+    for part in parts:
+        leaf = part.rsplit("/", 1)[-1]
+        if leaf.lower() == _ID_RSA:
+            return part
+    return None
 
 
 def _db_inoculation() -> Inoculation:
