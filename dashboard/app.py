@@ -5,7 +5,10 @@
 
 from __future__ import annotations
 
+import json
+import os
 import sys
+import threading
 from pathlib import Path
 
 # Agregar directorio dashboard al path para imports locales
@@ -62,7 +65,74 @@ def init_session_state() -> None:
         st.session_state.attacker_ip = "192.168.1.105"
 
 
+_LIVE_EVENTS: list[dict] = []
+_LIVE_ERROR = ""
+_SUBSCRIBER_STARTED = False
+
+
+def _load_env_file() -> None:
+    env_path = Path(__file__).resolve().parents[1] / ".env"
+    if not env_path.is_file():
+        return
+    for raw in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        if key and key not in os.environ:
+            os.environ[key] = value.strip()
+
+
+def _ensure_redis_subscriber() -> None:
+    global _SUBSCRIBER_STARTED, _LIVE_ERROR
+    if _SUBSCRIBER_STARTED:
+        return
+    _SUBSCRIBER_STARTED = True
+    _load_env_file()
+    try:
+        import redis
+    except ImportError:
+        _LIVE_ERROR = "Falta el paquete redis. El panel sigue en modo demo."
+        return
+    host = os.environ.get("REDIS_HOST", "127.0.0.1")
+    port = os.environ.get("REDIS_PORT", "6379")
+    channel = os.environ.get("REDIS_CHANNEL", "honey_events")
+
+    def _listen() -> None:
+        global _LIVE_ERROR
+        try:
+            client = redis.Redis.from_url(f"redis://{host}:{port}/0", decode_responses=True)
+            pubsub = client.pubsub()
+            pubsub.subscribe(channel)
+            for message in pubsub.listen():
+                if message.get("type") != "message":
+                    continue
+                try:
+                    _LIVE_EVENTS.append(json.loads(message["data"]))
+                except json.JSONDecodeError:
+                    continue
+                del _LIVE_EVENTS[:-50]
+        except Exception:
+            _LIVE_ERROR = f"Redis no responde en {host}:{port}. El panel sigue en modo demo."
+
+    threading.Thread(target=_listen, name="honey-dashboard-redis", daemon=True).start()
+
+
+_ensure_redis_subscriber()
 init_session_state()
+
+if _LIVE_ERROR:
+    st.sidebar.warning(_LIVE_ERROR)
+elif _LIVE_EVENTS:
+    latest = _LIVE_EVENTS[-1]
+    st.sidebar.success(f"En vivo: {latest.get('event_type', 'evento')}")
+else:
+    st.sidebar.info("Esperando eventos en Redis. Los botones de abajo son la demo.")
+if st.sidebar.button("Actualizar eventos de Redis"):
+    st.rerun()
+if _LIVE_EVENTS:
+    st.sidebar.caption(f"{len(_LIVE_EVENTS)} eventos recibidos en esta sesión del panel")
 
 # Barra lateral: Configuración y Simulador de Ataques para Demo
 st.sidebar.title("🎛️ Consola de Control SOC")

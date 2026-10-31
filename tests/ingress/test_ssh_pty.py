@@ -1,64 +1,67 @@
-"""
-tests/ingress/test_ssh_pty.py
-Dueño: Programador 1 (P1).
-Responsabilidad: Validación del listener AsyncSSH, captura de auth y emulación de terminal PTY.
-"""
+# Dueño: Programador 1 (P1).
+# Responsabilidad: Validación de la captura de auth y del ensamble de sesión, sin red.
+# Puede importar: honey_agent.composition.wire_ingress y honey_agent.ingress
+# No importar: sockets, un LLM real o iptables
 
-import pytest
-import asyncssh
+import unittest
+
+from honey_agent.composition.wire_ingress import bind_ssh_server
+from honey_agent.ingress.auth import HoneyAuthHandler
+from honey_agent.ingress.pty_session import HoneyPTYSession
+from honey_agent.ingress.ssh_server import HoneySSHServer
 from honey_agent.vfs.in_memory_tree import VirtualFileSystem
 from honey_agent.vfs.skeleton import populate_ubuntu_skeleton
-from honey_agent.ingress.auth import HoneyAuthHandler
-from honey_agent.ingress.ssh_server import HoneySSHServer
 
-def test_auth_capture():
-    """Verifica que el gestor de autenticación registre las credenciales enviadas."""
-    auth = HoneyAuthHandler()
-    assert auth.authenticate_password("192.168.1.50", 45678, "admin", "p4ssw0rd!") is True
-    assert len(auth.captured_log) == 1
-    record = auth.captured_log[0]
-    assert record.ip == "192.168.1.50"
-    assert record.username == "admin"
-    assert record.password == "p4ssw0rd!"
 
-@pytest.mark.asyncio
-async def test_ssh_server_e2e_interaction():
-    """Valida un ciclo completo de conexión SSH, autenticación permisiva y ejecución de comandos."""
-    master_vfs = VirtualFileSystem()
-    populate_ubuntu_skeleton(master_vfs)
-    auth = HoneyAuthHandler()
-    host_key = asyncssh.generate_private_key("ssh-rsa", key_size=2048)
+class _FakeSession:
+    def __init__(self) -> None:
+        self.vfs = object()
 
-    # Iniciar servidor en puerto efímero 22225
-    server = await asyncssh.create_server(
-        lambda: HoneySSHServer(master_vfs=master_vfs, auth_handler=auth),
-        host="127.0.0.1",
-        port=22225,
-        server_host_keys=[host_key],
-        server_version="OpenSSH_8.9p1 Ubuntu-3ubuntu0.4",
-        encoding="utf-8"
-    )
+    def get_prompt(self) -> str:
+        return "root@prod-srv-app01:~# "
 
-    try:
-        async with asyncssh.connect(
-            "127.0.0.1",
-            port=22225,
-            username="attacker_root",
-            password="fake_password_123",
-            known_hosts=None
-        ) as conn:
-            # 1. Comprobar captura de credenciales
-            assert len(auth.captured_log) >= 1
-            assert auth.captured_log[-1].username == "attacker_root"
+    def execute_builtin(self, cmd_line: str) -> tuple[bool, str, str, int]:
+        return True, cmd_line, "", 0
 
-            # 2. Ejecutar whoami vía canal interactivo/exec
-            res_who = await conn.run("whoami")
-            assert res_who.stdout.strip() == "attacker_root"
+    def to_snapshot(self):
+        raise AssertionError("esta prueba no exporta snapshot")
 
-            # 3. Ejecutar cat de /etc/os-release en VFS
-            res_cat = await conn.run("cat /etc/os-release")
-            assert "Ubuntu 22.04" in res_cat.stdout
-    finally:
-        server.close()
-        await server.wait_closed()
 
+class AuthCaptureTests(unittest.TestCase):
+    def test_password_is_recorded(self) -> None:
+        auth = HoneyAuthHandler()
+        self.assertTrue(auth.authenticate_password("192.168.1.50", 45678, "admin", "p4ssw0rd!"))
+        self.assertEqual(len(auth.captured_log), 1)
+        record = auth.captured_log[0]
+        self.assertEqual(record.ip, "192.168.1.50")
+        self.assertEqual(record.username, "admin")
+        self.assertEqual(record.password, "p4ssw0rd!")
+
+
+class SSHServerAssemblyTests(unittest.TestCase):
+    def test_session_requested_uses_the_injected_opener(self) -> None:
+        opened: list[tuple[str, str]] = []
+
+        def open_session(username: str, session_id: str) -> _FakeSession:
+            opened.append((username, session_id))
+            return _FakeSession()
+
+        server = HoneySSHServer(HoneyAuthHandler(), open_session)
+        server.username = "root"
+        session = server.session_requested()
+        self.assertEqual(opened, [("root", "sess-01")])
+        self.assertIsInstance(session, HoneyPTYSession)
+
+    def test_one_connection_reuses_the_cloned_tree(self) -> None:
+        master = VirtualFileSystem()
+        populate_ubuntu_skeleton(master)
+        server = bind_ssh_server(master, HoneyAuthHandler())
+        server.username = "root"
+        first = server.session_requested()
+        second = server.session_requested()
+        self.assertIs(first.state.vfs, second.state.vfs)
+        self.assertIsNot(first.state.vfs, master)
+
+
+if __name__ == "__main__":
+    unittest.main()

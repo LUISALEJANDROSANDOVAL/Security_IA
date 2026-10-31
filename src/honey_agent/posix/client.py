@@ -85,12 +85,14 @@ def build_language_model(environ: Mapping[str, str] | None = None) -> LanguageMo
     provider = env.get("LLM_PROVIDER", "gemini").strip().lower()
     temperature = _read_temperature(env)
     max_tokens = _read_max_tokens(env)
+    timeout = _read_timeout(env)
     if provider == "ollama":
         model = OllamaModel(
             base_url=env.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
             model=env.get("OLLAMA_MODEL", "llama3:8b-instruct-q4_K_M"),
             temperature=temperature,
             max_tokens=max_tokens,
+            timeout=timeout,
         )
     elif provider == "gemini":
         api_key = env.get("GEMINI_API_KEY", "").strip()
@@ -98,9 +100,10 @@ def build_language_model(environ: Mapping[str, str] | None = None) -> LanguageMo
             raise ModelConfigError("falta GEMINI_API_KEY")
         model = GeminiModel(
             api_key=api_key,
-            model=env.get("GEMINI_MODEL", "gemini-2.5-flash"),
+            model=env.get("GEMINI_MODEL", "gemini-3.5-flash"),
             temperature=temperature,
             max_tokens=max_tokens,
+            timeout=timeout,
         )
     else:
         raise ModelConfigError("LLM_PROVIDER debe ser gemini u ollama")
@@ -111,6 +114,17 @@ def _os_environ() -> Mapping[str, str]:
     import os
 
     return os.environ
+
+
+def _read_timeout(env: Mapping[str, str]) -> float:
+    raw = env.get("LLM_TIMEOUT", "30")
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        raise ModelConfigError("LLM_TIMEOUT no es un número") from None
+    if value <= 0:
+        raise ModelConfigError("LLM_TIMEOUT no es un número")
+    return value
 
 
 def _read_temperature(env: Mapping[str, str]) -> float:

@@ -19,6 +19,7 @@ def wire_defense(
     allowlist: Iterable[str] | None = None,
     iptables_path: str = "/usr/sbin/iptables",
     redis_url: str | None = None,
+    channel: str = "honeyagent:events",
     dry_run: bool | None = None,
 ) -> tuple[ThreatScorer, Isolator, EventBus]:
     """Instancia y ensambla los componentes de P4, entregándolos como puertos tipados.
@@ -39,6 +40,7 @@ def wire_defense(
 
     bus = DistributedEventBus(
         redis_url=redis_url,
+        channel=channel,
     )
 
     return scorer, isolator, bus

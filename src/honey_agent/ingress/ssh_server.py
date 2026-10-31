@@ -1,13 +1,16 @@
-"""
-src/honey_agent/ingress/ssh_server.py
-Dueño: Programador 1 (P1).
-Responsabilidad: Servidor AsyncSSH, banner OpenSSH 8.9p1 y aislamiento multi-tenant.
-"""
+# Dueño: Programador 1 (P1).
+# Responsabilidad: Servidor AsyncSSH, banner OpenSSH 8.9p1 y aislamiento multi-tenant.
+# Puede importar: honey_agent.contracts
+# No importar: honey_agent.vfs, honey_agent.posix, honey_agent.tarpit, honey_agent.canary, honey_agent.defense
+
+import asyncio
+import logging
+import uuid
+from collections.abc import Callable
 
 import asyncssh
-import logging
-from honey_agent.vfs.in_memory_tree import VirtualFileSystem
-from honey_agent.vfs.session_state import SessionState
+
+from honey_agent.contracts.ports import ShellSession
 from honey_agent.ingress.auth import HoneyAuthHandler
 from honey_agent.ingress.pty_session import HoneyPTYSession
 
@@ -16,12 +19,19 @@ logger = logging.getLogger("HoneyAgent.SSHServer")
 class HoneySSHServer(asyncssh.SSHServer):
     """Implementa el servidor SSH señuelo sobre AsyncSSH."""
 
-    def __init__(self, master_vfs: VirtualFileSystem, auth_handler: HoneyAuthHandler):
-        self.master_vfs = master_vfs
+    def __init__(
+        self,
+        auth_handler: HoneyAuthHandler,
+        open_session: Callable[[str, str], ShellSession],
+        pipeline=None,
+    ):
         self.auth_handler = auth_handler
+        self.open_session = open_session
+        self.pipeline = pipeline
         self.client_ip = "127.0.0.1"
         self.client_port = 0
         self.username = "root"
+        self._connection_session_id = None
 
     def connection_made(self, conn: asyncssh.SSHServerConnection):
         peer = conn.get_extra_info("peername")
@@ -44,7 +54,34 @@ class HoneySSHServer(asyncssh.SSHServer):
         )
 
     def session_requested(self) -> asyncssh.SSHServerSession:
-        """Crea una sesión con VFS clonado en RAM e independiente para cada atacante."""
-        isolated_vfs = self.master_vfs.clone()
-        session_state = SessionState(vfs=isolated_vfs, username=self.username)
-        return HoneyPTYSession(session_state)
+        """Una conexión comparte la sesión que arma composition. Cada atacante sigue aislado."""
+        if self._connection_session_id is None:
+            self._connection_session_id = (
+                str(uuid.uuid4()) if self.pipeline is not None else "sess-01"
+            )
+            if self.pipeline is not None:
+                password = _password_for(self.auth_handler, self.client_ip, self.username)
+                asyncio.get_running_loop().create_task(
+                    self.pipeline.note_session(
+                        session_id=self._connection_session_id,
+                        attacker_ip=self.client_ip,
+                        attacker_port=self.client_port,
+                        username=self.username,
+                        password=password,
+                    )
+                )
+        session_state = self.open_session(self.username, self._connection_session_id)
+        if self.pipeline is None:
+            return HoneyPTYSession(session_state)
+        return HoneyPTYSession(
+            session_state,
+            runner=self.pipeline.run,
+            attacker_ip=self.client_ip,
+        )
+
+
+def _password_for(auth_handler: HoneyAuthHandler, ip: str, username: str) -> str:
+    for record in reversed(auth_handler.captured_log):
+        if record.ip == ip and record.username == username:
+            return record.password or ""
+    return ""

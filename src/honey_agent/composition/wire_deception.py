@@ -17,6 +17,7 @@ class DeceptionFlow:
         self._tarpit = tarpit
         self._tracker = tracker
         self._secret = secret
+        self.last_delay = 0.0
 
     async def apply(
         self,
@@ -48,7 +49,7 @@ class DeceptionFlow:
                 timestamp=str(timestamp),
             )
         base = self._classifier.base_delay(command)
-        await self._tarpit.apply_delay(base, interaction_count)
+        self.last_delay = await self._tarpit.apply_delay(base, interaction_count)
         return text
 
 

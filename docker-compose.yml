@@ -1,0 +1,49 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: honey-redis
+    restart: unless-stopped
+    command: redis-server --save "" --appendonly no --maxmemory 512mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    networks:
+      - honey-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  honey-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: honey-agent-core
+    restart: unless-stopped
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./logs:/opt/honey-agent/logs
+
+  honey-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    container_name: honey-dashboard
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - .env
+    depends_on:
+      - honey-agent
+
+networks:
+  honey-net:
+    driver: bridge

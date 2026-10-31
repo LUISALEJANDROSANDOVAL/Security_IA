@@ -14,7 +14,7 @@ _SRC = Path(__file__).resolve().parents[2] / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from honey_agent.canary.factory import generate_canary_aws_key
+from honey_agent.canary.factory import generate_canary_aws_key, verify_canary_jwt
 from honey_agent.canary.inoculator import inoculate
 
 # Fixture local. No es el secreto de ejemplo de la documentación.
@@ -38,6 +38,13 @@ def _call(command: str, attacker_ip: str = _IP):
     )
 
 
+def _jwt_from(output: str) -> str:
+    for line in output.splitlines():
+        if line.startswith("CORP_JWT="):
+            return line.split("=", 1)[1]
+    raise AssertionError("CORP_JWT ausente")
+
+
 def _access_key(attacker_ip: str = _IP) -> str:
     issued = generate_canary_aws_key(
         attacker_ip,
@@ -59,6 +66,8 @@ class InoculateTests(unittest.TestCase):
         access_key = _access_key()
         self.assertIn(access_key, output)
         self.assertIn(_POSTGRES_URI, output)
+        token = _jwt_from(output)
+        self.assertTrue(verify_canary_jwt(token, _SECRET))
         self.assertEqual(result.token_type, "AWS_IAM_CREDENTIAL")
         self.assertEqual(result.token_identifier, access_key)
         self.assertEqual(result.destination_asset, "/var/www/html/.env")

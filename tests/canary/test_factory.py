@@ -15,7 +15,9 @@ if str(_SRC) not in sys.path:
 
 from honey_agent.canary.factory import (
     generate_canary_aws_key,
+    generate_canary_jwt,
     verify_aws_access_key,
+    verify_canary_jwt,
 )
 
 # Fixture local. No es el secreto de ejemplo de la documentación.
@@ -111,6 +113,19 @@ class GenerateCanaryAwsKeyTests(unittest.TestCase):
                 secret=b"",
                 timestamp=_TIMESTAMP,
             )
+
+
+class GenerateCanaryJwtTests(unittest.TestCase):
+    def test_jwt_has_three_segments_and_verifies(self) -> None:
+        token = generate_canary_jwt(_IP, _SESSION, secret=_SECRET, timestamp=_TIMESTAMP)
+        self.assertEqual(token.count("."), 2)
+        self.assertTrue(token.startswith("eyJ"))
+        self.assertTrue(verify_canary_jwt(token, _SECRET))
+        self.assertFalse(verify_canary_jwt(token + "x", _SECRET))
+
+    def test_empty_secret_raises_value_error(self) -> None:
+        with self.assertRaises(ValueError):
+            generate_canary_jwt(_IP, _SESSION, secret=b"", timestamp=_TIMESTAMP)
 
 
 if __name__ == "__main__":

@@ -6,7 +6,11 @@
 import shlex
 from dataclasses import dataclass
 
-from honey_agent.canary.factory import generate_canary_aws_key, generate_rsa_private_key_pem
+from honey_agent.canary.factory import (
+    generate_canary_aws_key,
+    generate_canary_jwt,
+    generate_rsa_private_key_pem,
+)
 
 _POSTGRES_URI = "postgres://db_backup:p4ss@10.0.8.44:5432/corp_fin"
 _SSH_LINE = "ssh -i ~/.ssh/backup_key dbadmin@10.0.12.88"
@@ -134,6 +138,15 @@ def _aws_inoculation(
     lines = []
     if with_postgres:
         lines.append(f"DATABASE_URL={_POSTGRES_URI}")
+        lines.append(
+            "CORP_JWT="
+            + generate_canary_jwt(
+                attacker_ip,
+                session_id,
+                secret=secret,
+                timestamp=timestamp,
+            )
+        )
     lines.append(f"AWS_ACCESS_KEY_ID={access_key}")
     lines.append(f"AWS_SECRET_ACCESS_KEY={issued['AWS_SECRET_ACCESS_KEY']}")
     return Inoculation(
