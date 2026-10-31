@@ -62,8 +62,17 @@ graph TD
 
 ## **Estructura Documental del Repositorio**
 
-La documentación técnica exhaustiva del sistema se organiza de forma modular en el directorio [`docs/`](file:///C:/Security_IA/docs/README.md):
+El repositorio organiza su documentación en dos niveles claramente diferenciados:
 
+### **📢 1. Documentación Pública y Explicativa ([docs_publicos/](file:///C:/Security_IA/docs_publicos/README.md))**
+Diseñada para clientes, evaluadores, directores (CISO/CIO), analistas y público general:
+* 📄 [**01. Whitepaper y Explicación General**](file:///C:/Security_IA/docs_publicos/01_Whitepaper_Honey_Agent_Explicacion_General.md): Visión ejecutiva, propuesta de valor, retorno de inversión y beneficios estratégicos.
+* 📊 [**02. Infografía y Conceptos Visuales**](file:///C:/Security_IA/docs_publicos/02_Infografia_y_Conceptos_Visuales.md): Diagramas de flujo sencillos, analogía del laberinto con niebla y ciclo de vida de un ataque.
+* 🖥️ [**03. Guía de Usuario del SOC Dashboard**](file:///C:/Security_IA/docs_publicos/03_Guia_Usuario_SOC_Dashboard.md): Manual visual para analistas y operadores sobre cómo leer el panel y responder ante alertas.
+* ⚖️ [**04. Preguntas Frecuentes y Legalidad (FAQ)**](file:///C:/Security_IA/docs_publicos/04_Preguntas_Frecuentes_y_Legalidad.md): Legalidad de la decepción activa (diferencia con Hack-Back), privacidad y garantías de seguridad.
+
+### **🛠️ 2. Documentación Técnica Interna ([docs/](file:///C:/Security_IA/docs/README.md))**
+Especificaciones profundas para arquitectos de software, desarrolladores y especialistas en seguridad:
 * 📘 [**01. Propuesta Técnica y Ejecutiva**](file:///C:/Security_IA/docs/01_Propuesta_Tecnica_Honey_Agent.md): Justificación estratégica, propuesta de valor y visión general del proyecto.
 * 🏗️ [**02. Arquitectura Técnica y Diseño Detallado (TDD)**](file:///C:/Security_IA/docs/02_Arquitectura_Tecnica_y_Diseno_del_Sistema.md): Descomposición en 8 capas, modelo en memoria VFS, modelo matemático del Tarpit y análisis STRIDE.
 * 🚀 [**03. Guía de Instalación, Despliegue y Operación**](file:///C:/Security_IA/docs/03_Guia_de_Instalacion_Despliegue_y_Operacion.md): Reubicación del SSH host, despliegue con Docker Compose, systemd y manual de configuración.
