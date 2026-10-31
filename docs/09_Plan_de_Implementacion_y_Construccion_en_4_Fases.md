@@ -81,8 +81,8 @@ gantt
 Construir la capa de entrada de red (*Ingress Layer*) capaz de aceptar conexiones SSH entrantes sin interactuar con los procesos reales del host, gestionando la interacción de la terminal interactiva pseudo-PTY y creando la estructura de datos en RAM para alojar el sistema de archivos efímero.
 
 ### **1.2. Módulos y Archivos a Construir**
-* `src/honey_agent/network/ssh_server.py`: Servidor SSH basado en `asyncssh` que gestiona el handshake criptográfico, banners de Ubuntu 22.04 y autenticación permisiva (`ACCEPT_ALL`).
-* `src/honey_agent/network/pty_session.py`: Controlador de terminal interactiva que captura secuencias de escape ANSI, saltos de línea, backspaces y combinaciones de teclas (`Ctrl+C`, `Ctrl+D`).
+* `src/honey_agent/ingress/ssh_server.py`: Servidor SSH basado en `asyncssh` que gestiona el handshake criptográfico, banners de Ubuntu 22.04 y autenticación permisiva (`ACCEPT_ALL`).
+* `src/honey_agent/ingress/pty_session.py`: Controlador de terminal interactiva que captura secuencias de escape ANSI, saltos de línea, backspaces y combinaciones de teclas (`Ctrl+C`, `Ctrl+D`).
 * `src/honey_agent/vfs/in_memory_tree.py`: Estructura jerárquica en RAM (`DirNode`, `FileNode`, `InodeTable`) para rutas estándar (`/bin`, `/etc`, `/var/www`, `/tmp`, `/root`, `/home`).
 * `src/honey_agent/vfs/session_state.py`: Gestor del estado de la sesión (`$PWD`, `$USER`, `$PATH`, variables de entorno y buffer histórico de comandos).
 
@@ -147,10 +147,10 @@ class VirtualFileSystem:
 Integrar el Modelo de Lenguaje Grande (LLM local vía Ollama/vLLM o cloud vía Google Gemini) para emular la salida de cualquier comando complejo de Linux (tuberías, awk, sed, ps, netstat), dotando al motor de blindaje contra *Prompt Injections* y fugas de personalidad de IA.
 
 ### **2.2. Módulos y Archivos a Construir**
-* `src/honey_agent/llm/client.py`: Conector agnóstico para proveedores LLM (Gemini API, Ollama Llama-3-8B, vLLM).
-* `src/honey_agent/llm/prompts.py`: Master System Prompt con restricciones estrictas de emulación POSIX y esquemas JSON.
-* `src/honey_agent/llm/sanitizer.py`: Pre-sanitizador con encapsulación XML (`<attacker_raw_input>`) y validador de salida regex anti-fugas.
-* `src/honey_agent/llm/context_manager.py`: Poda de ventana deslizante de comandos históricos y serialización del estado del VFS.
+* `src/honey_agent/posix/client.py`: Conector agnóstico para proveedores LLM (Gemini API, Ollama Llama-3-8B, vLLM).
+* `src/honey_agent/posix/prompts.py`: Master System Prompt con restricciones estrictas de emulación POSIX y esquemas JSON.
+* `src/honey_agent/posix/sanitizer.py`: Pre-sanitizador con encapsulación XML (`<attacker_raw_input>`) y validador de salida regex anti-fugas.
+* `src/honey_agent/posix/context_manager.py`: Poda de ventana deslizante de comandos históricos y serialización del estado del VFS.
 
 ### **2.3. Tareas Técnicas Detalladas**
 1. **Pipeline de Inferencia Asíncrona:**
@@ -162,7 +162,7 @@ Integrar el Modelo de Lenguaje Grande (LLM local vía Ollama/vLLM o cloud vía G
    * Garantizar que comandos como `ps aux | grep root | wc -l` o `cat /etc/passwd | cut -d: -f1` produzcan resultados numéricos coherentes con el VFS en memoria.
 
 ```python
-# Referencia de Implementación: src/honey_agent/llm/sanitizer.py
+# Referencia de Implementación: src/honey_agent/posix/sanitizer.py
 import re
 
 AI_LEAK_REGEX = re.compile(
@@ -237,10 +237,10 @@ class CognitiveTarpit:
 Cerrar el ciclo de defensa activa integrando el motor de mapeo heurístico **MITRE ATT&CK Enterprise**, el cálculo dinámico del **Threat Score**, la expulsión perimetral atómica en el kernel Linux (`iptables DROP`), y la visualización interactiva en tiempo real para el equipo de seguridad mediante un dashboard en Streamlit.
 
 ### **4.2. Módulos y Archivos a Construir**
-* `src/honey_agent/mitre/rules.py`: Conjunto de expresiones regulares compiladas para categorizar tácticas y técnicas (T1082, T1033, T1003, T1059, etc.).
-* `src/honey_agent/mitre/scorer.py`: Calculador de amenaza acumulada con decaimiento temporal exponencial.
-* `src/honey_agent/mitigation/netfilter.py`: Ejecutor atómico de comandos `iptables` / `ipset` mediante llamadas seguras al kernel.
-* `src/honey_agent/telemetry/events.py`: Modelos Pydantic para serializar eventos estructurados en Redis y exportación STIX 2.1.
+* `src/honey_agent/defense/rules.py`: Conjunto de expresiones regulares compiladas para categorizar tácticas y técnicas (T1082, T1033, T1003, T1059, etc.).
+* `src/honey_agent/defense/scorer.py`: Calculador de amenaza acumulada con decaimiento temporal exponencial.
+* `src/honey_agent/defense/netfilter.py`: Ejecutor atómico de comandos `iptables` / `ipset` mediante llamadas seguras al kernel.
+* `src/honey_agent/contracts/events.py`: Modelos Pydantic para serializar eventos estructurados en Redis y exportación STIX 2.1.
 * `dashboard/app.py`: Panel de control en tiempo real con Streamlit, Plotly, mapa de geolocalización de IPs atacantes y timeline forense.
 
 ### **4.3. Tareas Técnicas Detalladas**
@@ -258,7 +258,7 @@ Cerrar el ciclo de defensa activa integrando el motor de mapeo heurístico **MIT
    * Crear visualizaciones con Plotly: velocímetro del Threat Score, matriz MITRE con técnicas activadas, y feed en vivo del terminal.
 
 ```python
-# Referencia de Implementación: src/honey_agent/mitigation/netfilter.py
+# Referencia de Implementación: src/honey_agent/defense/netfilter.py
 import asyncio
 import logging
 
@@ -308,57 +308,7 @@ class NetfilterMitigation:
 
 ## **4. Estructura de Directorios Resultante del Proyecto**
 
-Al culminar las 4 partes, el repositorio presentará la siguiente arquitectura de código limpia y modular:
+El árbol de trabajo en paralelo, con un dueño por carpeta, está en [10. Reparto de trabajo entre 4 programadores](10_Reparto_de_Trabajo_4_Programadores.md). Cada archivo de `src/`, `dashboard/` y `tests/` abre con las líneas `Dueño` y `Responsabilidad`.
 
-```text
-C:\Security_IA\
-├── config.yaml                    # Configuración global del sistema
-├── docker-compose.yml             # Despliegue contenerizado unificado
-├── requirements.txt               # Dependencias de Python 3.11+
-├── README.md                      # Documento maestro del repositorio
-├── docs\                          # Suite documental completa (HA-01 a HA-09)
-│   ├── 01_Propuesta_Tecnica_Honey_Agent.md
-│   ├── 02_Arquitectura_Tecnica_y_Diseno_del_Sistema.md
-│   ├── 03_Guia_de_Instalacion_Despliegue_y_Operacion.md
-│   ├── 04_Matriz_MITRE_ATTACK_y_Motor_Heuristico.md
-│   ├── 05_Ingenieria_de_Prompts_y_Seguridad_Adversaria.md
-│   ├── 06_Especificacion_de_API_y_Modelos_de_Datos.md
-│   ├── 07_Playbook_de_Pruebas_y_Simulacion_Red_Team.md
-│   ├── 08_Pitch_Deck_Guion_Demo_y_Defensa_Tecnica.md
-│   ├── 09_Plan_de_Implementacion_y_Construccion_en_4_Fases.md
-│   └── README.md
-├── src\
-│   └── honey_agent\
-│       ├── __init__.py
-│       ├── main.py                # Punto de entrada del servicio
-│       ├── network\               # PARTE 1: Listeners SSH / HTTP
-│       │   ├── ssh_server.py
-│       │   └── pty_session.py
-│       ├── vfs\                   # PARTE 1: Virtual File System en RAM
-│       │   ├── in_memory_tree.py
-│       │   └── session_state.py
-│       ├── llm\                   # PARTE 2: Motor Generativo y Hardening
-│       │   ├── client.py
-│       │   ├── prompts.py
-│       │   ├── sanitizer.py
-│       │   └── context_manager.py
-│       ├── tarpit\                # PARTE 3: Retardo Dinámico
-│       │   ├── engine.py
-│       │   └── classifier.py
-│       ├── canary\                # PARTE 3: Contra-Inteligencia Firmada
-│       │   ├── factory.py
-│       │   └── tracker.py
-│       ├── mitre\                 # PARTE 4: Detección e Inteligencia Táctica
-│       │   ├── rules.py
-│       │   └── scorer.py
-│       ├── mitigation\            # PARTE 4: Aislamiento Kernel Netfilter
-│       │   └── netfilter.py
-│       └── telemetry\             # PARTE 4: Bus de Eventos & STIX 2.1
-│           └── events.py
-├── dashboard\                     # PARTE 4: Consola SOC en Streamlit
-│   ├── app.py
-│   └── components\
-└── tests\                         # Harness de Pruebas Ofensivas
-    └── simulate_attack.py
-```
+Los paquetes de implementación solo importan `honey_agent.contracts`. El ensamble vive en `src/honey_agent/composition/`.
 

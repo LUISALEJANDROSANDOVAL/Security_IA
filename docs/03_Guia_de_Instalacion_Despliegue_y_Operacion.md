@@ -184,6 +184,10 @@ networks:
     driver: bridge
 ```
 
+### **4.2. Variables de entorno**
+
+La plantilla versionada está en la raíz del repositorio: `.env.example`. Copiarla a `.env` y completar `GEMINI_API_KEY`, `CANARY_SIGNATURE_SECRET` y `CANARY_ALERT_WEBHOOK_URL`. El archivo `.env` no se sube al repositorio. Systemd lo carga con `EnvironmentFile=/opt/honey-agent/.env`. Los parámetros que no son secretos permanecen en `config.yaml`.
+
 ---
 
 ## **5. Archivo de Configuración Maestro (`config.yaml`)**

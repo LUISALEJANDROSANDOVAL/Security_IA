@@ -73,6 +73,7 @@ La documentación técnica exhaustiva del sistema se organiza de forma modular e
 * 🧪 [**07. Playbook de Pruebas y Simulación Red Team**](file:///C:/Security_IA/docs/07_Playbook_de_Pruebas_y_Simulacion_Red_Team.md): Suite de pruebas automatizadas en Python, validación de fidelidad y matriz Go/No-Go.
 * 🎤 [**08. Pitch Deck, Guión Demo y Defensa Técnica**](file:///C:/Security_IA/docs/08_Pitch_Deck_Guion_Demo_y_Defensa_Tecnica.md): Pitch ejecutivo (30s, 3 min), coreografía paso a paso para la demo en vivo y respuestas a jurado.
 * 🛠️ [**09. Plan de Implementación en 4 Fases**](file:///C:/Security_IA/docs/09_Plan_de_Implementacion_y_Construccion_en_4_Fases.md): Hoja de ruta de desarrollo de software dividida en 4 partes modulares e incrementales.
+* 👥 [**10. Reparto entre 4 Programadores**](file:///C:/Security_IA/docs/10_Reparto_de_Trabajo_4_Programadores.md): Dueño de cada carpeta y archivo, regla de imports y criterio de cierre para trabajar en paralelo.
 * 🧭 [**Índice Maestro de Documentación (Hub)**](file:///C:/Security_IA/docs/README.md): Rutas de lectura personalizadas según el rol (Jurado, CISO, DevOps, Red Team).
 
 ---

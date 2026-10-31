@@ -1,0 +1,42 @@
+# Dueño: los cuatro (P1, P2, P3, P4)
+# Responsabilidad: mapa de carpetas para revisores de Git. Hoy las líneas de ruta están comentadas porque aún no hay usuarios de GitHub.
+# Cuando el equipo tenga usuarios, quitar el '#' inicial y sustituir @usuario_p1..p4.
+# El detalle vivo está en docs/10_Reparto_de_Trabajo_4_Programadores.md.
+
+# P1 — Ingress y VFS
+# /src/honey_agent/ingress/                         @usuario_p1
+# /src/honey_agent/vfs/                             @usuario_p1
+# /src/honey_agent/composition/wire_ingress.py      @usuario_p1
+# /tests/ingress/                                   @usuario_p1
+# /tests/vfs/                                       @usuario_p1
+# /tests/fakes/filesystem.py                        @usuario_p1
+
+# P2 — Emulación POSIX
+# /src/honey_agent/posix/                           @usuario_p2
+# /src/honey_agent/composition/wire_posix.py        @usuario_p2
+# /tests/posix/                                     @usuario_p2
+# /tests/fakes/emulator.py                          @usuario_p2
+
+# P3 — Tarpit y Canaries
+# /src/honey_agent/tarpit/                          @usuario_p3
+# /src/honey_agent/canary/                          @usuario_p3
+# /src/honey_agent/composition/wire_deception.py    @usuario_p3
+# /tests/tarpit/                                    @usuario_p3
+# /tests/canary/                                    @usuario_p3
+# /tests/fakes/tarpit.py                            @usuario_p3
+# /tests/fakes/canary.py                            @usuario_p3
+
+# P4 — Defensa y SOC
+# /src/honey_agent/defense/                         @usuario_p4
+# /src/honey_agent/composition/wire_defense.py      @usuario_p4
+# /dashboard/                                       @usuario_p4
+# /tests/defense/                                   @usuario_p4
+# /tests/fakes/defense.py                           @usuario_p4
+
+# Los cuatro — contrato y ensamble (dos revisores)
+# /src/honey_agent/contracts/                       @usuario_p1 @usuario_p2 @usuario_p3 @usuario_p4
+# /src/honey_agent/composition/pipeline.py          @usuario_p1 @usuario_p2 @usuario_p3 @usuario_p4
+# /src/honey_agent/composition/main.py              @usuario_p1 @usuario_p2 @usuario_p3 @usuario_p4
+# /tests/composition/                               @usuario_p1 @usuario_p2 @usuario_p3 @usuario_p4
+# /docs/10_Reparto_de_Trabajo_4_Programadores.md    @usuario_p1 @usuario_p2 @usuario_p3 @usuario_p4
+# /.env.example                                     @usuario_p1 @usuario_p2 @usuario_p3 @usuario_p4

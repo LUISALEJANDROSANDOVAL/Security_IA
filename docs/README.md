@@ -17,9 +17,10 @@ graph TD
     Hub --> Doc7["07. Playbook de Pruebas Red Team<br/>(HA-TEST-07)"]
     Hub --> Doc8["08. Pitch Deck & Guión de Demo<br/>(HA-PITCH-08)"]
     Hub --> Doc9["09. Plan de Implementación en 4 Fases<br/>(HA-DEV-09)"]
+    Hub --> Doc10["10. Reparto entre 4 Programadores<br/>(HA-TEAM-10)"]
 
     classDef core fill:#1890ff,stroke:#fff,stroke-width:2px,color:#fff;
-    class Hub,Doc1,Doc2,Doc3,Doc4,Doc5,Doc6,Doc7,Doc8,Doc9 core;
+    class Hub,Doc1,Doc2,Doc3,Doc4,Doc5,Doc6,Doc7,Doc8,Doc9,Doc10 core;
 ```
 
 ---
@@ -37,6 +38,7 @@ graph TD
 | **HA-TEST-07** | **Playbook de Pruebas y Simulación Red Team** | [07_Playbook_de_Pruebas_y_Simulacion_Red_Team.md](file:///C:/Security_IA/docs/07_Playbook_de_Pruebas_y_Simulacion_Red_Team.md) | Red Team, QA Engineers | Script de emulación ofensiva E2E en Python, validación de fidelidad POSIX, pruebas de estrés y matriz de aprobación Go/No-Go. |
 | **HA-PITCH-08** | **Pitch Deck, Guión Demo y Defensa Técnica** | [08_Pitch_Deck_Guion_Demo_y_Defensa_Tecnica.md](file:///C:/Security_IA/docs/08_Pitch_Deck_Guion_Demo_y_Defensa_Tecnica.md) | Evaluadores, Oradores, Red Team | Pitch de 30s, 3 min y 10 min, guía paso a paso de demostración en vivo (Kali vs SOC) y respuestas a 8 preguntas difíciles de jurado. |
 | **HA-DEV-09** | **Plan de Implementación en 4 Fases** | [09_Plan_de_Implementacion_y_Construccion_en_4_Fases.md](file:///C:/Security_IA/docs/09_Plan_de_Implementacion_y_Construccion_en_4_Fases.md) | Desarrolladores, Líderes Técnicos, DevOps | Hoja de ruta de desarrollo dividida en 4 partes modulares: Ingress/VFS, LLM POSIX, Tarpit/Canary y MITRE/Netfilter/SOC. |
+| **HA-TEAM-10** | **Reparto entre 4 Programadores** | [10_Reparto_de_Trabajo_4_Programadores.md](file:///C:/Security_IA/docs/10_Reparto_de_Trabajo_4_Programadores.md) | Programadores P1–P4 | Dueño de cada carpeta y archivo, regla de imports y criterio de cierre para trabajar en paralelo. |
 
 ---
 
@@ -52,16 +54,20 @@ flowchart TD
     Role -->|Arquitecto de Ciberseguridad / CISO| PathArch["1. Propuesta Técnica (01)<br/>2. Arquitectura Detallada TDD (02)<br/>3. Ingeniería de Prompts & Hardening (05)"]
     Role -->|Ingeniero SecOps / DevOps / Infra| PathOps["1. Guía de Instalación & Despliegue (03)<br/>2. Especificación de API & Eventos (06)<br/>3. Playbook de Pruebas (07)"]
     Role -->|Red Teamer / Pentester / Investigador| PathRed["1. Matriz MITRE & Motor Heurístico (04)<br/>2. Seguridad Adversaria & Canaries (05)<br/>3. Playbook de Pruebas Red Team (07)"]
+    Role -->|Programador P1–P4| PathDev["1. Reparto de carpetas (10)<br/>2. Plan de 4 fases (09)<br/>3. API y modelos de eventos (06)"]
 
     classDef exec fill:#722ed1,stroke:#fff,stroke-width:2px,color:#fff;
     classDef arch fill:#1890ff,stroke:#fff,stroke-width:2px,color:#fff;
     classDef ops fill:#13c2c2,stroke:#fff,stroke-width:2px,color:#fff;
     classDef red fill:#f5222d,stroke:#fff,stroke-width:2px,color:#fff;
 
+    classDef dev fill:#52c41a,stroke:#fff,stroke-width:2px,color:#fff;
+
     class PathExec exec;
     class PathArch arch;
     class PathOps ops;
     class PathRed red;
+    class PathDev dev;
 ```
 
 ---
