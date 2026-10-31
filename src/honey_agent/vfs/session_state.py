@@ -1,18 +1,20 @@
 """
 src/honey_agent/vfs/session_state.py
 Dueño: Programador 1 (P1).
-Responsabilidad: Estado mutable de sesión ($PWD, variables) y builtins de la Parte 1.
+Responsabilidad: Estado mutable de sesión ($PWD, variables), builtins de la Parte 1 y exportación de SessionSnapshot.
 """
 
 from typing import Dict, List, Tuple
 from honey_agent.vfs.in_memory_tree import VirtualFileSystem
+from honey_agent.contracts.snapshots import SessionSnapshot
 
 class SessionState:
     """Mantiene el estado y variables de una sesión interactiva."""
 
-    def __init__(self, vfs: VirtualFileSystem, username: str = "root"):
+    def __init__(self, vfs: VirtualFileSystem, username: str = "root", session_id: str = "sess-01"):
         self.vfs = vfs
         self.username = username
+        self.session_id = session_id
         self.hostname = "prod-srv-app01"
         self.cwd = "/root" if username == "root" else f"/home/{username}"
         self.env: Dict[str, str] = {
@@ -32,6 +34,20 @@ class SessionState:
         symbol = "#" if self.username == "root" else "$"
         display_cwd = "~" if self.cwd == self.env.get("HOME") else self.cwd
         return f"{self.username}@{self.hostname}:{display_cwd}{symbol} "
+
+    def to_snapshot(self) -> SessionSnapshot:
+        """Genera una vista inmutable para que P2 (LLM), P3 (Tarpit) y P4 (Mitre) lean el contexto."""
+        entries = self.vfs.listdir(self.cwd) or []
+        visible = [name for name, _ in entries]
+        return SessionSnapshot(
+            session_id=self.session_id,
+            username=self.username,
+            hostname=self.hostname,
+            cwd=self.cwd,
+            env=dict(self.env),
+            command_history=list(self.command_history),
+            visible_files=visible
+        )
 
     def execute_builtin(self, cmd_line: str) -> Tuple[bool, str, str, int]:
         """

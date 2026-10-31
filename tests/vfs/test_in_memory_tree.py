@@ -113,3 +113,11 @@ def test_non_builtin_delegation(session):
 
     handled, _, _, _ = session.execute_builtin("uname -a")
     assert handled is False
+
+def test_session_to_snapshot(session):
+    snapshot = session.to_snapshot()
+    assert snapshot.username == "root"
+    assert snapshot.cwd == "/root"
+    assert "USER" in snapshot.env
+    assert "SHELL" in snapshot.env
+    assert isinstance(snapshot.visible_files, list)
